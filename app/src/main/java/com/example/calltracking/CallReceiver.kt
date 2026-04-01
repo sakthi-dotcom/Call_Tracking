@@ -16,6 +16,7 @@ class CallReceiver : BroadcastReceiver() {
     companion object {
         private var lastState = TelephonyManager.CALL_STATE_IDLE
         private var saved = false
+        private var recorder: CallRecorder? = null
     }
 
     override fun onReceive(context: Context, intent: Intent) {
@@ -35,10 +36,26 @@ class CallReceiver : BroadcastReceiver() {
         when (state) {
 
             TelephonyManager.CALL_STATE_OFFHOOK -> {
-                saved = false
+                if (recorder == null) {
+                    saved = false
+                    recorder = CallRecorder()
+                    recorder?.startRecording(context)
+                    Log.d("CALL_RECORD", "Recording started")
+                }
             }
 
             TelephonyManager.CALL_STATE_IDLE -> {
+
+                val filePath = recorder?.getFilePath()
+                Log.d("CALL_RECORD", "Before stop path: $filePath")
+
+                if (recorder != null) {
+                    recorder?.stopRecording()
+                    recorder = null
+                }
+
+                Log.d("CALL_RECORD", "Recording stopped")
+                Log.d("CALL_RECORD", "File path: $filePath")
 
                 if (!saved) {
 
@@ -59,12 +76,13 @@ class CallReceiver : BroadcastReceiver() {
                             else -> "UNKNOWN"
                         }
 
-                        val duration = durationSec * 1000 // convert sec → ms
+                        val duration = durationSec * 1000
                         val time = System.currentTimeMillis()
 
                         Log.d("CALL_FINAL", "Number: $number")
                         Log.d("CALL_FINAL", "Type: $type")
                         Log.d("CALL_FINAL", "Duration(ms): $duration")
+                        Log.d("CALL_FINAL", "Recording: $filePath")
 
                         repository.insert(
                             CallLogEntity(
@@ -85,7 +103,6 @@ class CallReceiver : BroadcastReceiver() {
         lastState = state
     }
 
-    // 🔥 FINAL FUNCTION (WITH DURATION)
     private fun getLastCallDetails(context: Context): Triple<String, Int, Long> {
 
         val cursor = context.contentResolver.query(

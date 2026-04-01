@@ -1,7 +1,9 @@
 package com.example.calltracking
 
 import android.Manifest
+import android.content.pm.PackageManager
 import android.os.Bundle
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModelProvider
@@ -24,22 +26,49 @@ class MainActivity : AppCompatActivity() {
 
         viewModel = ViewModelProvider(this)[CallViewModel::class.java]
 
-        viewModel.allLogs.observe(this) {
-            adapter.submitList(it)
+        viewModel.allLogs.observe(this) { list ->
+            adapter.submitList(list)
         }
-
         requestPermissions()
     }
 
     private fun requestPermissions() {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(
-                Manifest.permission.READ_PHONE_STATE,
-                Manifest.permission.READ_CALL_LOG,
-                Manifest.permission.RECORD_AUDIO
-            ),
-            1
+
+        val permissions = arrayOf(
+            Manifest.permission.READ_PHONE_STATE,
+            Manifest.permission.READ_CALL_LOG,
+            Manifest.permission.RECORD_AUDIO
         )
+
+        val notGranted = permissions.filter {
+            ActivityCompat.checkSelfPermission(this, it) != PackageManager.PERMISSION_GRANTED
+        }
+
+        if (notGranted.isNotEmpty()) {
+            ActivityCompat.requestPermissions(this, notGranted.toTypedArray(), 1)
+        }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (requestCode == 1) {
+
+            if (grantResults.isNotEmpty() &&
+                grantResults.all { it == PackageManager.PERMISSION_GRANTED }
+            ) {
+                Toast.makeText(this, "Permissions granted ✅", Toast.LENGTH_SHORT).show()
+            } else {
+                Toast.makeText(
+                    this,
+                    "Permissions required for call tracking & recording",
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+        }
     }
 }
