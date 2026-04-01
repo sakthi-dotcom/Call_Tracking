@@ -30,7 +30,7 @@ class CallRecorder {
             }
 
             recorder?.apply {
-                setAudioSource(MediaRecorder.AudioSource.VOICE_COMMUNICATION)
+                setAudioSource(MediaRecorder.AudioSource.MIC)
                 setOutputFormat(MediaRecorder.OutputFormat.MPEG_4)
                 setAudioEncoder(MediaRecorder.AudioEncoder.AAC)
 
