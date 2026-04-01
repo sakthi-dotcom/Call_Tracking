@@ -48,10 +48,9 @@ class CallReceiver : BroadcastReceiver() {
 
                     CoroutineScope(Dispatchers.IO).launch {
 
-                        delay(700) // wait for CallLog update
+                        delay(700)
 
-                        val (number, callType, durationSec) =
-                            getLastCallDetails(context)
+                        val (number, callType, durationSec) = getLastCallDetails(context)
 
                         val type = when (callType) {
                             android.provider.CallLog.Calls.INCOMING_TYPE -> "INCOMING"
